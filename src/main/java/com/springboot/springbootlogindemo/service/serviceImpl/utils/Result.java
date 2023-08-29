@@ -1,4 +1,4 @@
-package com.springboot.springbootlogindemo.utils;
+package com.springboot.springbootlogindemo.service.serviceImpl.utils;
 
 public class Result<T> {
     private String code;

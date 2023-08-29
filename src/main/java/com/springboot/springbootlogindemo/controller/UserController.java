@@ -2,7 +2,7 @@ package com.springboot.springbootlogindemo.controller;
 
 import com.springboot.springbootlogindemo.domain.User;
 import com.springboot.springbootlogindemo.service.UserService;
-import com.springboot.springbootlogindemo.utils.Result;
+import com.springboot.springbootlogindemo.service.serviceImpl.utils.Result;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
