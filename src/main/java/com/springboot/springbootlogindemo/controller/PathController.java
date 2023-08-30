@@ -7,6 +7,7 @@ import com.springboot.springbootlogindemo.service.serviceImpl.utils.Result;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -19,10 +20,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/path")
@@ -31,25 +29,41 @@ public class PathController {
     private PathService pathService;
 
     @PostMapping("/get")
-    public ResponseEntity<List<Map<String, Object>>> getController(){
+    public ResponseEntity<Map<String, Object>> getController(@RequestBody Map<String, String> requestBody) {
 
-        List<SavePath> paths = pathService.findAll();
-        List<Map<String, Object>> files = new ArrayList<>();
+        String uname = requestBody.get("uname"); // 获取前端传递的uname值
 
-        if (!paths.isEmpty()) {
-            String rootPath = paths.get(0).getSave_path(); // Assuming the first path is the root directory
-            File rootDirectory = new File(rootPath);
-            Map<String, Object> rootInfo = new HashMap<>();
-            rootInfo.put("save_path", rootDirectory.getName() + "/");
-            rootInfo.put("space", 0);
-            rootInfo.put("children", new ArrayList<>()); // Initialize empty children list
-            files.add(rootInfo);
+        String rootPath = pathService.findAll().get(0).getSave_path(); // 根据你的需求设置根路径
+        File rootDirectory = new File(rootPath);
+        System.out.println(uname);
+        System.out.println(rootPath);
+        File[] subDirectories = rootDirectory.listFiles(File::isDirectory);
+        Map<String, Object> response = new HashMap<>();
 
-            printDirectoryTree(rootDirectory, rootInfo, 1);
+        if (subDirectories != null) {
+            for (File subDir : subDirectories) {
+                if (subDir.getName().equals(uname)) {
+                    Map<String, Object> rootInfo = new HashMap<>();
+                    rootInfo.put("save_path", subDir.getName() + "/");
+                    rootInfo.put("space", 0);
+                    rootInfo.put("children", new ArrayList<>()); // Initialize empty children list
+                    rootInfo.put("uname", uname);
+
+                    printDirectoryTree(subDir, rootInfo, 1);
+
+                    response = rootInfo;
+                    break; // Only process the first matching subdirectory
+                }
+            }
         }
-        System.out.println(files);
-        return ResponseEntity.ok(files);
+
+        System.out.println(response);
+        return ResponseEntity.ok(response);
     }
+
+
+
+
 
     private void printDirectoryTree(File directory, Map<String, Object> parentInfo, int depth) {
         File[] fileList = directory.listFiles();
@@ -88,10 +102,11 @@ public class PathController {
     public Result<String> Delete(@RequestBody List<String> paths) {
 //        String savePath = pathService.findAll().get(0).getSave_path();
 //        System.out.println(savePath);
+        String getPath=pathService.findAll().get(0).getSave_path()+"/";
         List<String> formattedPaths = new ArrayList<>(); // 用于存放修正后的路径
         for (String path : paths) {
             // 将路径中的 "easypan" 替换为 "E:/easypan"
-            String formattedPath = path.replace("easypan", "E:/easypan");
+            String formattedPath = getPath+path;
             // 将路径中的反斜杠替换为正斜杠
             formattedPath = formattedPath.replace("\\", "/");
             formattedPaths.add(formattedPath);
@@ -118,61 +133,50 @@ public class PathController {
             return Result.error("删除失败", "发生错误：" + e.getMessage());
         }
     }
+
     @PostMapping("/download")
-    public void downloadFiles(HttpServletResponse response, @RequestBody List<String> paths) {
-        try {
-            response.setContentType("application/octet-stream");
-
-            int bufferLength = 1024;
-            int delayMillis = (int) Math.ceil(1000.0 * bufferLength / 500.0);
-            byte[] buffer = new byte[bufferLength];
-
-            for (String path : paths) {
-                File file = new File("E:/easypan", path);
-
-                if (file.isFile()) {
-                    // 如果是文件，直接返回文件的内容
-                    FileInputStream in = new FileInputStream(file);
-                    String fileName = file.getName();
-
-                    // 设置响应头，指定文件名，告诉浏览器以附件形式下载
-                    response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-
-                    OutputStream out = response.getOutputStream();
-
-                    int bytesRead;
-                    long startTime = System.currentTimeMillis();
-
-                    while ((bytesRead = in.read(buffer)) != -1) {
-                        out.write(buffer, 0, bytesRead);
-
-                        long currentTime = System.currentTimeMillis();
-                        long elapsedTime = currentTime - startTime;
-
-                        if (elapsedTime < delayMillis) {
-                            Thread.sleep(delayMillis - elapsedTime);
-                        }
-
-                        startTime = System.currentTimeMillis();
-                    }
-
-                    in.close();
-                    out.flush();
-                    out.close();
-                }
-            }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+    public ResponseEntity<Map<String, List<String>>> downloadFiles(@RequestBody List<String> paths) throws IOException {
+        List<String> formattedPaths = new ArrayList<>();
+        String getPath=pathService.findAll().get(0).getSave_path()+"/";
+        for (String path : paths) {
+            System.out.println(path);
+            String formattedPath = getPath+path;
+            formattedPath = formattedPath.replace("//", "/");
+            formattedPaths.add(formattedPath);
         }
+        List<String> downloadUrls = new ArrayList<>();
+        for (String path : formattedPaths) {
+            System.out.println("路径："+path);
+            File file = new File(path);
+            if (file.isFile()) {
+                String fileName = file.getName();
+                path=path.replace(getPath,"");
+                String[] splitPath=path.split("/");
+                System.out.println("路径切割："+ Arrays.toString(splitPath)+splitPath.length);
+                StringBuilder truePath= new StringBuilder();
+                if(splitPath.length>1){
+                    for(int i=0;i<splitPath.length-1;i++){
+                        truePath.append(splitPath[i]).append("/");
+                    }
+                }
+                System.out.println("文件名："+fileName);
+                String downloadUrl = "http://localhost:8001/download/"+truePath+fileName;
+                downloadUrls.add(downloadUrl);
+            }
+        }
+
+        Map<String, List<String>> responseData = new HashMap<>();
+        responseData.put("downloadUrls", downloadUrls);
+
+        return ResponseEntity.ok(responseData);
     }
 
     @PostMapping("/save")
     public Result<String> save(@RequestBody Map<String, String> data) {
         String path = data.get("newPath");
         String name = data.get("name");
-
-        // 根据操作系统不同，将路径分隔符进行适当转换
-        String formattedPath = path.replace("easypan", "E:/easypan");
+        String getPath=pathService.findAll().get(0).getSave_path()+"/";
+        String formattedPath = getPath+path;
         formattedPath = formattedPath.replace("/", "\\");
 
         // 创建新文件夹的完整路径
@@ -197,8 +201,8 @@ public class PathController {
                                       @RequestParam("totalChunks") int totalChunks,
                                       @RequestParam("fileName") String fileName) {
         try {
-//            String fileName = StringUtils.cleanPath(chunk.getOriginalFilename());
-            String formattedPath = savePath.replace("easypan", "E:/easypan");
+            String getPath=pathService.findAll().get(0).getSave_path()+"/";
+            String formattedPath = getPath+savePath;
             formattedPath = formattedPath.replace("/", "\\");
 
             String chunkFileName = fileName + ".part" + chunkIndex;
