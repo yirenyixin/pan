@@ -2,6 +2,7 @@ package com.springboot.springbootlogindemo.service.serviceImpl;
 
 
 import com.springboot.springbootlogindemo.domain.SavePath;
+import com.springboot.springbootlogindemo.domain.Share;
 import com.springboot.springbootlogindemo.repository.PathDao;
 import com.springboot.springbootlogindemo.service.PathService;
 import com.springboot.springbootlogindemo.service.UserService;

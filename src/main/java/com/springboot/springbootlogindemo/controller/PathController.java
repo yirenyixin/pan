@@ -280,46 +280,46 @@ public class PathController {
         return new ResponseEntity<>(resource, headers, HttpStatus.PARTIAL_CONTENT);
     }
 
-    @CrossOrigin(origins = "http://localhost:8080/", maxAge = 3600)
-    @PostMapping("/share")
-    public ResponseEntity<Map<String, String>> shareFiles(@RequestBody List<String> pathsToShare) {
-        String getPath=pathService.findAll().get(0).getSave_path()+"/";
-        String formattedPath = getPath+pathsToShare.get(0);
-        formattedPath = formattedPath.replace("/", "\\");
-        System.out.println("分享路径："+formattedPath);
-        // 生成分享链接和密码的逻辑
-        String shareLink = generateUniqueLink(formattedPath);
-        String sharePassword = generateRandomPassword();
-
-        // 存储链接和密码的逻辑，可以使用数据库等方式
-
-        Map<String, String> response = new HashMap<>();
-        response.put("shareLink", shareLink);
-        response.put("sharePassword", sharePassword);
-
-        return ResponseEntity.ok(response);
-    }
-    String generateUniqueLink(String path) {
-//        return "http://localhost:8080/share/" + UUID.randomUUID().toString();
-        try {
-            String encodedPath = URLEncoder.encode(path, "UTF-8");
-            return "http://localhost:8080/share/" + encodedPath;
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-
-    // 生成随机密码
-    String generateRandomPassword() {
-        // 生成随机密码的逻辑
-        // 例如，生成一个由数字和字母组成的6位密码
-        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        StringBuilder password = new StringBuilder();
-        for (int i = 0; i < 6; i++) {
-            int index = (int) (Math.random() * characters.length());
-            password.append(characters.charAt(index));
-        }
-        return password.toString();
-    }
+//    @CrossOrigin(origins = "http://localhost:8080/", maxAge = 3600)
+//    @PostMapping("/share")
+//    public ResponseEntity<Map<String, String>> shareFiles(@RequestBody List<String> pathsToShare) {
+//        String getPath=pathService.findAll().get(0).getSave_path()+"/";
+//        String formattedPath = getPath+pathsToShare.get(0);
+//        formattedPath = formattedPath.replace("/", "\\");
+//        System.out.println("分享路径："+formattedPath);
+//        // 生成分享链接和密码的逻辑
+//        String shareLink = generateUniqueLink(formattedPath);
+//        String sharePassword = generateRandomPassword();
+//
+//        // 存储链接和密码的逻辑，可以使用数据库等方式
+//
+//        Map<String, String> response = new HashMap<>();
+//        response.put("shareLink", shareLink);
+//        response.put("sharePassword", sharePassword);
+//
+//        return ResponseEntity.ok(response);
+//    }
+//    String generateUniqueLink(String path) {
+////        return "http://localhost:8080/share/" + UUID.randomUUID().toString();
+//        try {
+//            String encodedPath = URLEncoder.encode(path, "UTF-8");
+//            return "http://localhost:8080/share/" + encodedPath;
+//        } catch (UnsupportedEncodingException e) {
+//            e.printStackTrace();
+//            return "";
+//        }
+//    }
+//
+//    // 生成随机密码
+//    String generateRandomPassword() {
+//        // 生成随机密码的逻辑
+//        // 例如，生成一个由数字和字母组成的6位密码
+//        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+//        StringBuilder password = new StringBuilder();
+//        for (int i = 0; i < 6; i++) {
+//            int index = (int) (Math.random() * characters.length());
+//            password.append(characters.charAt(index));
+//        }
+//        return password.toString();
+//    }
 }

@@ -1,5 +1,6 @@
 package com.springboot.springbootlogindemo.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -8,6 +9,7 @@ import javax.persistence.Table;
 @Entity
 public class SavePath {
     @Id
+    @Column(name = "save_path")
     private String save_path;//存储路径
     private long   space;//空间
 
