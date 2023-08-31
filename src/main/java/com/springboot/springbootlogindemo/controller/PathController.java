@@ -6,10 +6,8 @@ import com.springboot.springbootlogindemo.service.PathService;
 import com.springboot.springbootlogindemo.service.serviceImpl.utils.Result;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.*;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -242,6 +241,85 @@ public class PathController {
             return Result.error("失败", "文件切片上传失败：" + e.getMessage());
         }
     }
+    @GetMapping("/download/{filePath}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String filePath, @RequestHeader(value = "Range", required = false) String rangeHeader) throws IOException {
+        String fullPath = pathService.findAll().get(0).getSave_path() + "/" + filePath;
+        File file = new File(fullPath);
 
+        if (!file.exists() || !file.isFile()) {
+            return ResponseEntity.notFound().build();
+        }
 
+        long fileLength = file.length();
+
+        List<HttpRange> ranges = HttpRange.parseRanges(rangeHeader);
+
+        if (ranges.isEmpty() || ranges.size() > 1) {
+            // Full file download
+            return ResponseEntity
+                    .status(HttpStatus.PARTIAL_CONTENT)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .contentLength(fileLength)
+                    .body((Resource) new FileSystemResource(file));
+        }
+
+        HttpRange range = ranges.get(0);
+        long start = range.getRangeStart(fileLength);
+        long end = range.getRangeEnd(fileLength);
+
+        long contentLength = end - start + 1;
+
+        Path path = Paths.get(fullPath);
+        Resource resource = (Resource) new InputStreamResource(Files.newInputStream(path));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Accept-Ranges", "bytes");
+        headers.add("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
+        headers.setContentLength(contentLength);
+
+        return new ResponseEntity<>(resource, headers, HttpStatus.PARTIAL_CONTENT);
+    }
+
+    @CrossOrigin(origins = "http://localhost:8080/", maxAge = 3600)
+    @PostMapping("/share")
+    public ResponseEntity<Map<String, String>> shareFiles(@RequestBody List<String> pathsToShare) {
+        String getPath=pathService.findAll().get(0).getSave_path()+"/";
+        String formattedPath = getPath+pathsToShare.get(0);
+        formattedPath = formattedPath.replace("/", "\\");
+        System.out.println("分享路径："+formattedPath);
+        // 生成分享链接和密码的逻辑
+        String shareLink = generateUniqueLink(formattedPath);
+        String sharePassword = generateRandomPassword();
+
+        // 存储链接和密码的逻辑，可以使用数据库等方式
+
+        Map<String, String> response = new HashMap<>();
+        response.put("shareLink", shareLink);
+        response.put("sharePassword", sharePassword);
+
+        return ResponseEntity.ok(response);
+    }
+    String generateUniqueLink(String path) {
+//        return "http://localhost:8080/share/" + UUID.randomUUID().toString();
+        try {
+            String encodedPath = URLEncoder.encode(path, "UTF-8");
+            return "http://localhost:8080/share/" + encodedPath;
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    // 生成随机密码
+    String generateRandomPassword() {
+        // 生成随机密码的逻辑
+        // 例如，生成一个由数字和字母组成的6位密码
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder password = new StringBuilder();
+        for (int i = 0; i < 6; i++) {
+            int index = (int) (Math.random() * characters.length());
+            password.append(characters.charAt(index));
+        }
+        return password.toString();
+    }
 }
