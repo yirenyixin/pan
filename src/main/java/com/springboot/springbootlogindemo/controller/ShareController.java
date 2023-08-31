@@ -90,5 +90,19 @@ public class ShareController {
         }
         return password.toString();
     }
+    //保存文件
+    @PostMapping("/savePath")
+    public ResponseEntity<Map<String, Object>> savePath(@RequestBody Map<String, String> requestData) {
+        String currentPath = requestData.get("currentPath");
+        String currentRoute = requestData.get("currentRoute");
+        System.out.println(currentPath);
+        System.out.println(currentRoute);
+        // 在这里执行你的保存逻辑，比如将路径信息存储到数据库或者进行其他操作
+        // ...
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true); // 假设保存成功
+        return ResponseEntity.ok(response);
+    }
     // ...其他代码
 }

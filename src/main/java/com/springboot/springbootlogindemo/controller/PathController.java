@@ -96,7 +96,64 @@ public class PathController {
         }
         return "";
     }
+    @PostMapping("/getfile")
+    public ResponseEntity<Map<String, Object>> getFileController(@RequestBody Map<String, String> requestBody) {
 
+        String uname = requestBody.get("uname"); // 获取前端传递的uname值
+
+        String rootPath = pathService.findAll().get(0).getSave_path(); // 根据你的需求设置根路径
+        File rootDirectory = new File(rootPath);
+        System.out.println(uname);
+        System.out.println(rootPath);
+        File[] subDirectories = rootDirectory.listFiles(File::isDirectory);
+        Map<String, Object> response = new HashMap<>();
+
+        if (subDirectories != null) {
+            for (File subDir : subDirectories) {
+                if (subDir.getName().equals(uname)) {
+                    Map<String, Object> rootInfo = new HashMap<>();
+                    rootInfo.put("save_path", subDir.getName() + "/");
+                    rootInfo.put("space", 0);
+                    rootInfo.put("children", new ArrayList<>()); // Initialize empty children list
+                    rootInfo.put("uname", uname);
+
+                    printFileDirectoryTree(subDir, rootInfo, 1);
+
+                    response = rootInfo;
+                    break; // Only process the first matching subdirectory
+                }
+            }
+        }
+
+        System.out.println(response);
+        return ResponseEntity.ok(response);
+    }
+    private void printFileDirectoryTree(File directory, Map<String, Object> parentInfo, int depth) {
+        File[] fileList = directory.listFiles();
+        if (fileList != null) {
+            List<Map<String, Object>> children = new ArrayList<>();
+            for (File file : fileList) {
+                if(file.isDirectory()) {
+                    Map<String, Object> fileInfo = new HashMap<>();
+                    String savePath =  file.getName() + "/" ;
+                    fileInfo.put("save_path", savePath);
+                    fileInfo.put("space", depth * 2 - 1); // Customize the space value as needed
+
+                    if (!file.isDirectory()) {
+                        fileInfo.put("file_type", getFileType(file.getName()));
+                    }
+
+                    children.add(fileInfo);
+
+                    if (file.isDirectory()) {
+                        fileInfo.put("children", new ArrayList<>()); // Initialize empty children list
+                        printFileDirectoryTree(file, fileInfo, depth + 1);
+                    }
+                }
+            }
+            parentInfo.put("children", children);
+        }
+    }
     @PostMapping("/delete")
     public Result<String> Delete(@RequestBody List<String> paths) {
 //        String savePath = pathService.findAll().get(0).getSave_path();
