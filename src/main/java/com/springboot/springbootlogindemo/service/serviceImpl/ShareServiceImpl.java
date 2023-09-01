@@ -6,6 +6,7 @@ import com.springboot.springbootlogindemo.service.ShareService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Service
@@ -22,9 +23,9 @@ public class ShareServiceImpl implements ShareService {
     public void saveShare(Share share) {
         shareDao.save(share);
     }
-    @Override
-    public void deleteById(String id) {
-        shareDao.deleteById(id);
+    @Transactional
+    public void deleteShare(String id) {
+        shareDao.deleteShare(id);
     }
     @Override
     public Share findById(String id){

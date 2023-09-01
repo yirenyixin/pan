@@ -45,9 +45,10 @@ public class ShareServiceTest {
         shareService.saveShare(share);
     }
     @Test
-    @Transactional
     public void testDelete() {
-        shareService.deleteById("test");
+        Share share=new Share();
+        share.setId("test");
+        shareService.deleteShare(share.getId());
     }
 }
 

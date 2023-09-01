@@ -8,7 +8,7 @@ public interface ShareService {
     List<Share> findAll();
     void saveShare(Share share);
 
-    void deleteById(String id);
+    void deleteShare(String id);
 
     Share findById(String id);
     // 不需要再定义 updateShareById 方法，使用 save 方法实现更新逻辑
