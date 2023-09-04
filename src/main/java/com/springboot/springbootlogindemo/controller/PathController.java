@@ -216,6 +216,7 @@ public class PathController {
                     }
                 }
                 System.out.println("文件名："+fileName);
+                System.out.println("路径："+truePath);
                 String downloadUrl = "http://localhost:8001/download/"+truePath+fileName;
                 downloadUrls.add(downloadUrl);
             }
