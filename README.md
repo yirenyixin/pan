@@ -93,7 +93,6 @@ Springboot+nginx+mysql
       ]
     }
   ],
-  "uname": "uname"
 }
 
 ````
