@@ -58,7 +58,7 @@ Springboot+nginx+mysql
 如选择E:/easypan/为云盘位置要创建，还有注册的两个用户，test1，test2，也要在E:/easypan/创建test1和test2文件夹。
 
 
-postman查看文件树 http://localhost:8080/api/path/get
+postman查看文件树 http://localhost:8081/api/path/get
 
 返回的数据类似
 ````
