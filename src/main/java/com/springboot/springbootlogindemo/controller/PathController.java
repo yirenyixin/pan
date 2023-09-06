@@ -337,47 +337,41 @@ public class PathController {
 
         return new ResponseEntity<>(resource, headers, HttpStatus.PARTIAL_CONTENT);
     }
+    @PostMapping("preView")
+    public ResponseEntity<Map<String, List<String>>> preViewFiles(@RequestBody List<String> paths) throws IOException {
+        List<String> formattedPaths = new ArrayList<>();
+        String getPath=pathService.findAll().get(0).getSave_path()+"/";
+        for (String path : paths) {
+            System.out.println(path);
+            String formattedPath = getPath+path;
+            formattedPath = formattedPath.replace("//", "/");
+            formattedPaths.add(formattedPath);
+        }
+        List<String> preViewUrls = new ArrayList<>();
+        for (String path : formattedPaths) {
+            System.out.println("路径："+path);
+            File file = new File(path);
+            if (file.isFile()) {
+                String fileName = file.getName();
+                path=path.replace(getPath,"");
+                String[] splitPath=path.split("/");
+                System.out.println("路径切割："+ Arrays.toString(splitPath)+splitPath.length);
+                StringBuilder truePath= new StringBuilder();
+                if(splitPath.length>1){
+                    for(int i=0;i<splitPath.length-1;i++){
+                        truePath.append(splitPath[i]).append("/");
+                    }
+                }
+                System.out.println("文件名："+fileName);
+                System.out.println("路径："+truePath);
+                String preViewUrl = "http://localhost:8001/preView/"+truePath+fileName;
+                preViewUrls.add(preViewUrl);
+            }
+        }
 
-//    @CrossOrigin(origins = "http://localhost:8080/", maxAge = 3600)
-//    @PostMapping("/share")
-//    public ResponseEntity<Map<String, String>> shareFiles(@RequestBody List<String> pathsToShare) {
-//        String getPath=pathService.findAll().get(0).getSave_path()+"/";
-//        String formattedPath = getPath+pathsToShare.get(0);
-//        formattedPath = formattedPath.replace("/", "\\");
-//        System.out.println("分享路径："+formattedPath);
-//        // 生成分享链接和密码的逻辑
-//        String shareLink = generateUniqueLink(formattedPath);
-//        String sharePassword = generateRandomPassword();
-//
-//        // 存储链接和密码的逻辑，可以使用数据库等方式
-//
-//        Map<String, String> response = new HashMap<>();
-//        response.put("shareLink", shareLink);
-//        response.put("sharePassword", sharePassword);
-//
-//        return ResponseEntity.ok(response);
-//    }
-//    String generateUniqueLink(String path) {
-////        return "http://localhost:8080/share/" + UUID.randomUUID().toString();
-//        try {
-//            String encodedPath = URLEncoder.encode(path, "UTF-8");
-//            return "http://localhost:8080/share/" + encodedPath;
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//            return "";
-//        }
-//    }
-//
-//    // 生成随机密码
-//    String generateRandomPassword() {
-//        // 生成随机密码的逻辑
-//        // 例如，生成一个由数字和字母组成的6位密码
-//        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-//        StringBuilder password = new StringBuilder();
-//        for (int i = 0; i < 6; i++) {
-//            int index = (int) (Math.random() * characters.length());
-//            password.append(characters.charAt(index));
-//        }
-//        return password.toString();
-//    }
+        Map<String, List<String>> responseData = new HashMap<>();
+        responseData.put("preViewUrls", preViewUrls);
+
+        return ResponseEntity.ok(responseData);
+    }
 }
